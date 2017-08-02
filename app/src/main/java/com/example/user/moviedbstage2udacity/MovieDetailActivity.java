@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
@@ -134,7 +135,6 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         dataMovie = getIntent().getParcelableExtra("MovieData");
         initView();
 
-        progressDialog.setCancelable(false);
         progressDialog.setMessage("Please Wait Initializing Detail Movie Progress...");
         progressDialog.show();
 
@@ -211,21 +211,50 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     @Override
     public void onClick(VideoData videoData) {
         //Toast.makeText(MovieDetailActivity.this,videoData.key,Toast.LENGTH_LONG).show();
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.WATCH_TRAILER_URL+videoData.key)));
+        Uri trailer = Uri.parse(Constants.WATCH_TRAILER_URL+videoData.key);
+        Intent intent = new Intent(Intent.ACTION_VIEW,trailer);
+        if(intent.resolveActivity(getPackageManager()) != null){
+            startActivity(intent);
+        }
     }
 
     // review onClick
     @Override
     public void onClick(ReviewDao reviewData) {
-        startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(reviewData.url)));
+        Uri review = Uri.parse(reviewData.url);
+        Intent intent = new Intent(Intent.ACTION_VIEW,review);
+        if(intent.resolveActivity(getPackageManager()) != null){
+            startActivity(intent);
+        }
     }
 
     private void initDB(){
         FavoriteDBHelper dbHelper = new FavoriteDBHelper(this);
-        mDb = dbHelper.getWritableDatabase();
+        //mDb = dbHelper.getWritableDatabase();
+        mDb = dbHelper.getReadableDatabase();
+
+        Cursor c = checkIsFavorite();
+        //Toast.makeText(MovieDetailActivity.this,String.valueOf(c.getCount()),Toast.LENGTH_LONG).show();
+        if(c.getCount() > 0){
+            Toast.makeText(MovieDetailActivity.this,String.valueOf(c.getCount()),Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private Cursor checkIsFavorite(){
+        Uri uri = FavoriteMovieContract.FavoriteEntry.CONTENT_URI;
+        uri = uri.buildUpon().appendPath(String.valueOf(dataMovie.id)).build();
+        return getContentResolver().query(uri,null,null,null, FavoriteMovieContract.FavoriteEntry.COLUMN_TIMESTAMP);
     }
 
     public void addFavoriteMovie(View view){
+        try{
+            addToFavorite();
+        }catch (Exception e){
+            Toast.makeText(MovieDetailActivity.this,"Already add to favorite",Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void addToFavorite(){
         ContentValues cv = new ContentValues();
         cv.put(FavoriteMovieContract.FavoriteEntry.COLUMN_ID_MOVIE, dataMovie.id);
         cv.put(FavoriteMovieContract.FavoriteEntry.COLUMN_ORIGINAL_TITLE,dataMovie.original_title);
@@ -243,5 +272,6 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
             finish();
         }
     }
+
 }
 

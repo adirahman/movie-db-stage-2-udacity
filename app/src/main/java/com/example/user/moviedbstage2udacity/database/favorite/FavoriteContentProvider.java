@@ -18,8 +18,8 @@ import android.support.annotation.Nullable;
 public class FavoriteContentProvider extends ContentProvider {
 
     public static final int FAVORITE = 100;
-    /*public static final int FAVORITE_WITH_ID = 101;*/
-    public static final int FAVORITE_WITH_TITLE = 102;
+    public static final int FAVORITE_WITH_ID = 101;
+    //public static final int FAVORITE_WITH_TITLE = 102;
 
     private static final UriMatcher sUriMatcher = buildUriMatcher();
 
@@ -27,8 +27,8 @@ public class FavoriteContentProvider extends ContentProvider {
         UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
         uriMatcher.addURI(FavoriteMovieContract.AUTHORITY, FavoriteMovieContract.PATH_FAVORITE, FAVORITE);
-        /*uriMatcher.addURI(FavoriteMovieContract.AUTHORITY,FavoriteMovieContract.PATH_FAVORITE+"/#",FAVORITE_WITH_ID);*/
-        uriMatcher.addURI(FavoriteMovieContract.AUTHORITY, FavoriteMovieContract.PATH_FAVORITE + "/*", FAVORITE_WITH_TITLE);
+        uriMatcher.addURI(FavoriteMovieContract.AUTHORITY,FavoriteMovieContract.PATH_FAVORITE+"/#",FAVORITE_WITH_ID);
+        //uriMatcher.addURI(FavoriteMovieContract.AUTHORITY, FavoriteMovieContract.PATH_FAVORITE + "/*", FAVORITE_WITH_TITLE);
 
         return uriMatcher;
     }
@@ -58,6 +58,19 @@ public class FavoriteContentProvider extends ContentProvider {
                         projection,
                         selection,
                         selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
+                break;
+            case FAVORITE_WITH_ID:
+                String movieId = uri.getPathSegments().get(1);
+                String mSelection = "_id=?";
+                String[] mSelectionArgs = new String[]{movieId};
+
+                retCursor = db.query(FavoriteMovieContract.FavoriteEntry.TABLE_NAME,
+                        projection,
+                        mSelection,
+                        mSelectionArgs,
                         null,
                         null,
                         sortOrder);

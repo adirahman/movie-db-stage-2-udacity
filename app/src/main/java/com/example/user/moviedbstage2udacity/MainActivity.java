@@ -96,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
     }
 
     public void fetchDataFromAPI(){
-        progressDialog.setCancelable(false);
         progressDialog.setMessage("Please Wait Fetching Movie Progress...");
         progressDialog.show();
         getNowPlaying();
@@ -311,15 +310,6 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
 
     public Cursor getAllFavorite(){
         return getContentResolver().query(FavoriteMovieContract.FavoriteEntry.CONTENT_URI,null,null,null, FavoriteMovieContract.FavoriteEntry.COLUMN_TIMESTAMP);
-                /*mDb.query(
-                FavoriteMovieContract.FavoriteEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                FavoriteMovieContract.FavoriteEntry.COLUMN_TIMESTAMP
-        );*/
     }
 
     private ListMoviesDao populateWholeMovie(Cursor cursor){
