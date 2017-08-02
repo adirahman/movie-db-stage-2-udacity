@@ -8,7 +8,10 @@ import android.graphics.BitmapFactory;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,9 +39,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements MoviePassInterface {
+public class MainActivity extends AppCompatActivity implements MoviePassInterface,
+        LoaderManager.LoaderCallbacks<Cursor> {
 
     String TAG = MainActivity.class.getSimpleName();
+
+    MainViewPagerAdapter adapter = new MainViewPagerAdapter(getSupportFragmentManager());
     ViewPager viewPager;
     CoordinatorLayout mainLayout;
     ProgressBar pb;
@@ -57,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
     private static final String LIST_TOP_RATED = "listTopRated";
     private static final String LIST_FAVORITE = "listFavorite";
 
+    private static final int FAVORITE_LOADER_ID = 0;
+
     int flag = 0;
     int getPositionTab = 0;
 
@@ -72,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
         pb = (ProgressBar) findViewById(R.id.loading);
         viewPager = (ViewPager) findViewById(R.id.htab_viewpager);
 
-        initDB();
+        //initDB();
         if(savedInstanceState != null){
             if(savedInstanceState.containsKey(NOW_PLAYING)){
                 nowPlaying = savedInstanceState.getParcelable(NOW_PLAYING);
@@ -93,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
         }else {
             fetchDataFromAPI();
         }
+
+        getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID,null,this);
     }
 
     public void fetchDataFromAPI(){
@@ -213,8 +223,6 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
         progressDialog.dismiss();
     }
     private void setupViewPager(ViewPager pager){
-        MainViewPagerAdapter adapter = new MainViewPagerAdapter(getSupportFragmentManager());
-
 
         MovieFragment movieFragment = new MovieFragment();
         Bundle bundleData = new Bundle();
@@ -298,19 +306,18 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
         return super.onOptionsItemSelected(item);
     }
 
-    private void initDB(){
-        FavoriteDBHelper dbHelper = new FavoriteDBHelper(this);
-        mDb = dbHelper.getReadableDatabase();
+    /*private void initDB(){
         Cursor cursor = getAllFavorite();
         Log.d("DB Movie",cursor.getCount()+"");
         listFavorite = populateWholeMovie(cursor);
         Toast.makeText(MainActivity.this,cursor.getCount()+"",Toast.LENGTH_LONG).show();
+        adapter.notifyDataSetChanged();
     }
 
 
     public Cursor getAllFavorite(){
         return getContentResolver().query(FavoriteMovieContract.FavoriteEntry.CONTENT_URI,null,null,null, FavoriteMovieContract.FavoriteEntry.COLUMN_TIMESTAMP);
-    }
+    }*/
 
     private ListMoviesDao populateWholeMovie(Cursor cursor){
         int page = 1;
@@ -340,6 +347,61 @@ public class MainActivity extends AppCompatActivity implements MoviePassInterfac
         }
 
         return movies;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID,null,this);
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new AsyncTaskLoader<Cursor>(this) {
+
+            Cursor mFavoriteData = null;
+
+            @Override
+            protected void onStartLoading() {
+                if(mFavoriteData != null){
+                    deliverResult(mFavoriteData);
+                }else {
+                    forceLoad();
+                }
+            }
+
+            @Override
+            public Cursor loadInBackground() {
+                try{
+                    return getContentResolver().query(FavoriteMovieContract.FavoriteEntry.CONTENT_URI,
+                            null,
+                            null,
+                            null,
+                            FavoriteMovieContract.FavoriteEntry.COLUMN_TIMESTAMP);
+                }catch (Exception e){
+                    Log.e(TAG,"failed to asynchronously load data");
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+
+            public void deliverResult(Cursor data){
+                mFavoriteData = data;
+                listFavorite = populateWholeMovie(mFavoriteData);
+                super.deliverResult(data);
+            }
+        };
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.notifyDataSetChanged();
     }
 }
 

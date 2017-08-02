@@ -229,12 +229,7 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
     }
 
     private void initDB(){
-        FavoriteDBHelper dbHelper = new FavoriteDBHelper(this);
-        //mDb = dbHelper.getWritableDatabase();
-        mDb = dbHelper.getReadableDatabase();
-
         Cursor c = checkIsFavorite();
-        //Toast.makeText(MovieDetailActivity.this,String.valueOf(c.getCount()),Toast.LENGTH_LONG).show();
         if(c.getCount() > 0){
             Toast.makeText(MovieDetailActivity.this,String.valueOf(c.getCount()),Toast.LENGTH_LONG).show();
         }
@@ -265,7 +260,6 @@ public class MovieDetailActivity extends AppCompatActivity implements TrailerAda
         cv.put(FavoriteMovieContract.FavoriteEntry.COLUMN_RELEASE_DATE,dataMovie.release_date);
 
         Uri uri = getContentResolver().insert(FavoriteMovieContract.FavoriteEntry.CONTENT_URI,cv);
-        //mDb.insert(FavoriteMovieContract.FavoriteEntry.TABLE_NAME,null,cv);
 
         if(uri != null){
             Toast.makeText(MovieDetailActivity.this,"Success Add To Favorite",Toast.LENGTH_LONG).show();

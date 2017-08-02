@@ -28,7 +28,6 @@ public class FavoriteContentProvider extends ContentProvider {
 
         uriMatcher.addURI(FavoriteMovieContract.AUTHORITY, FavoriteMovieContract.PATH_FAVORITE, FAVORITE);
         uriMatcher.addURI(FavoriteMovieContract.AUTHORITY,FavoriteMovieContract.PATH_FAVORITE+"/#",FAVORITE_WITH_ID);
-        //uriMatcher.addURI(FavoriteMovieContract.AUTHORITY, FavoriteMovieContract.PATH_FAVORITE + "/*", FAVORITE_WITH_TITLE);
 
         return uriMatcher;
     }
